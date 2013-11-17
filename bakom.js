@@ -18,24 +18,40 @@
 		},
 
 		GetBackground = function(){
-			var _getBackgroundImage = function(){
-		    		var _src = '';
+			var _getBackgroundImageProperties = function(){
+		    		var _src = '',
+		    			_x = '',
+		    			_y = '',
+		    			_size = [];
 
 			        if (BgProp.element.currentStyle) {
-			        	var _src = BgProp.element.currentStyle['background']
+			        	_src = BgProp.element.currentStyle['background-image'];
+			        	_x = BgProp.element.currentStyle['background-position-x'];
+			        	_y = BgProp.element.currentStyle['background-position-y'];
 			        }
 
 			        else if(window.getComputedStyle) {
-			        	var _src = document.defaultView.getComputedStyle(BgProp.element, null).getPropertyValue('background')
+			        	_src = document.defaultView.getComputedStyle(BgProp.element, null).getPropertyValue('background-image');
+			        	_x = document.defaultView.getComputedStyle(BgProp.element, null).getPropertyValue('background-position-x');
+			        	_y = document.defaultView.getComputedStyle(BgProp.element, null).getPropertyValue('background-position-y');
+			        	_size = document.defaultView.getComputedStyle(BgProp.element, null).getPropertyValue('background-size').split(' ');
 			        }
-
+			        
 			        if(_src) _src = _src.slice(_src.indexOf('url(') + 4, _src.lastIndexOf(')'));
 			        else console.error('Unable to find a background image for ' + BgProp.element)
 
-			        return _src;
+			        return {
+			        	src : _src,
+			        	x : parseInt(_x, 10),
+			        	y : parseInt(_y, 10),
+			        	size : {
+			        			width : parseInt(_size[0], 10), 
+			        			height : parseInt(_size[1], 10)
+			        		}
+			        }
 	    		},
 			
-				_getBackgroundPosition = function(){
+				_getBackgroundBoxPosition = function(){
 					var _pos = BgProp.element.getBoundingClientRect();
 					return _pos;
 				};
@@ -43,8 +59,8 @@
 			BgProp.element = document.querySelectorAll('.' + Defaults.background)[0];
 			
 			if(BgProp.element){
-				BgProp.src = _getBackgroundImage(),
-				BgProp.pos = _getBackgroundPosition();
+				BgProp.prop = _getBackgroundImageProperties(),
+				BgProp.pos = _getBackgroundBoxPosition();
 			}
 
 			else{
@@ -53,6 +69,7 @@
 		},
 
 		GetText = function(){
+			//in the future more than one element might be supported
 			var _elements = document.querySelectorAll('.' + Defaults.text);
 			if(_elements.length > 0){
 				for (var i = 0; i < _elements.length; i++) {
@@ -79,13 +96,12 @@
 				_buildImage = function(){
 					var _image = '<svg width="' + TextEls[0].pos.width + '" height="' + TextEls[0].pos.height + '">' +
 										'<image ' +  
-											'class="m-box-clip-image"' +  
-											'xlink:href="' + BgProp.src +'"' +
-											'width="750"' +
-											'height="464"' +
+											'xlink:href="' + BgProp.prop.src +'"' +
+											'width="' + BgProp.prop.size.width + '"' +
+											'height="' + BgProp.prop.size.height + '"' +
 											'clip-path="url(#clipPath)"' +
-											'x="-' + (TextEls[0].pos.left - BgProp.pos.left) + '"' +
-											'y="-' + (TextEls[0].pos.top - BgProp.pos.top) + '"' +
+											'x="' + (BgProp.pos.left - TextEls[0].pos.left + BgProp.prop.x) + '"' +
+											'y="' + (BgProp.pos.top - TextEls[0].pos.top + BgProp.prop.y) + '"' +
 											'>' +
 										'</image>' +
 									'</svg>';
@@ -98,7 +114,7 @@
 					var _clipPath = '<svg>' + 
 										'<defs>' +
 											'<clipPath id="clipPath">' + 
-												'<text x="0" y="' + Defaults.leading + '" class="' + Defaults.style + '" xml:space="preserve">' + TextEls[0].element.innerHTML + '</text>' + 
+												'<text x="0" y="' + Defaults.leading + '" class="' + Defaults.style + '">' + TextEls[0].element.innerHTML + '</text>' + 
 											'</clipPath>' +
 										'</defs>' +
 									'</svg>';
