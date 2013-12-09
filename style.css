@@ -1,3 +1,15 @@
+@font-face {
+    font-family: 'dubtronicregular';
+    src: url('fonts/Dubtronic-Solid-webfont.eot');
+    src: url('fonts/Dubtronic-Solid-webfont.eot?#iefix') format('embedded-opentype'),
+         url('fonts/Dubtronic-Solid-webfont.woff') format('woff'),
+         url('fonts/Dubtronic-Solid-webfont.ttf') format('truetype'),
+         url('fonts/Dubtronic-Solid-webfont.svg#dubtronicregular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+
+}
+
 /* http://meyerweb.com/eric/tools/css/reset/ 
    v2.0 | 20110126
    License: none (public domain)
@@ -80,7 +92,7 @@ p, .m-box-clip-text-2{
 .m-box{
 	width: 500px;
 	margin: 0;
-	background-color: rgba(255,255,255,0.8);
+	background-color: rgba(255,255,255,1);
 	padding: 0px;
 }
 
