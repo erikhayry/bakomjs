@@ -147,7 +147,7 @@ window.Bakom = function(configure){
 				},
 
 				_buildClipPath = function(){
-					var _clipPath = '<svg>' + 
+					var _clipPath = '<svg style="position: absolute; top: 0; left:0;">' + 
 										'<defs>' +
 											'<clipPath id="' + clipPathId + '">' + 
 												'<text text-anchor="start" x="0" dy="' + bakom.defaults.dy + '" class="' + bakom.defaults.styleClass + '">' + textEl.element.innerHTML + '</text>' + 
