@@ -1,57 +1,77 @@
 
-var Bakom = function(configure){
-  	var This = this,
-  		ClipPathId = '',
-  		HasBeenDrawn = false,
-  		BgProp = {},
-  		TextEl, OriginalText; 
-  		
-  		This.Defaults = {
-			background : 'bakom-bg-1',
-			text : 'bakom-fg-1',
-			style : '.text',
-			dy : '0.9em'
+/*
+ * bakom.js 1.0
+ * http://erikportin.com/bakomjs
+ *
+ * Copyright 2013 Erik Portin
+ * Released under the MIT license
+ * https://github.com/erikportin/bakomjs/blob/master/LICENCE.md
+ */
+
+//define the global Bakom Variable as a class.
+window.Bakom = function(configure){
+
+  	var bakom = this,
+
+  		//variables global to bakom
+  		clipPathId = '',
+  		hasBeenDrawn = false,
+  		bgProp = {},
+  		textEl, originalText,
+  		svgs = {};
+
+  		//set default values
+  		bakom.defaults = {
+			backgroundSelector : '.bakom-bg-1',
+			textSelector : '.bakom-fg-1',
+			styleClass : 'text',
+			dy : '0.9em' ////https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/dy
 		};
 
-		var SVGs = {},
+		//functions global to bakom
 
-		Setup = function(configure){
+		//inital setup
+		var setup = function(configure){
+
+			//update defaults
 		  	for (var attrname in configure) {
-		  		if (This.Defaults.hasOwnProperty(attrname) && configure.hasOwnProperty(attrname)) { 
-		  			This.Defaults[attrname] = configure[attrname];
+		  		if (bakom.defaults.hasOwnProperty(attrname) && configure.hasOwnProperty(attrname)) { 
+		  			bakom.defaults[attrname] = configure[attrname];
 		  		} 
 		  	}
-		  	
+
+		  	//get a unique id for the clip path
 		  	var _i = 0;
 		  	while(document.getElementById('bakom-cp-' + _i)){
 		  		_i++;
 		  	}
-		  	ClipPathId = 'bakom-cp-' + _i;
+		  	clipPathId = 'bakom-cp-' + _i;
 		  	
 		},
 
-		GetBackground = function(){
+		//get background element properties
+		getBackground = function(){
 			var _getBackgroundImageProperties = function(){
 		    		var _src = '',
 		    			_x = '',
 		    			_y = '',
 		    			_size = [];
 
-			        if (BgProp.element.currentStyle) {
-			        	_src = BgProp.element.currentStyle['background-image'];
-			        	_x = BgProp.element.currentStyle['background-position-x'];
-			        	_y = BgProp.element.currentStyle['background-position-y'];
+			        if (bgProp.element.currentStyle) {
+			        	_src = bgProp.element.currentStyle['background-image'];
+			        	_x = bgProp.element.currentStyle['background-position-x'];
+			        	_y = bgProp.element.currentStyle['background-position-y'];
 			        }
 
 			        else if(window.getComputedStyle) {
-			        	_src = document.defaultView.getComputedStyle(BgProp.element, null).getPropertyValue('background-image');
-			        	_x = document.defaultView.getComputedStyle(BgProp.element, null).getPropertyValue('background-position-x');
-			        	_y = document.defaultView.getComputedStyle(BgProp.element, null).getPropertyValue('background-position-y');
-			        	_size = document.defaultView.getComputedStyle(BgProp.element, null).getPropertyValue('background-size').split(' ');
+			        	_src = document.defaultView.getComputedStyle(bgProp.element, null).getPropertyValue('background-image');
+			        	_x = document.defaultView.getComputedStyle(bgProp.element, null).getPropertyValue('background-position-x');
+			        	_y = document.defaultView.getComputedStyle(bgProp.element, null).getPropertyValue('background-position-y');
+			        	_size = document.defaultView.getComputedStyle(bgProp.element, null).getPropertyValue('background-size').split(' ');
 			        }
 			        
 			        if(_src) _src = _src.slice(_src.indexOf('url(') + 4, _src.lastIndexOf(')'));
-			        else console.error('Unable to find a background image for ' + BgProp.element)
+			        else console.error('Unable to find a background image for ' + bgProp.element)
 
 			        return {
 			        	src : _src,
@@ -65,38 +85,42 @@ var Bakom = function(configure){
 	    		},
 			
 				_getBackgroundBoxPosition = function(){
-					var _pos = BgProp.element.getBoundingClientRect();
+					var _pos = bgProp.element.getBoundingClientRect();
 					return _pos;
 				};
 
-			BgProp.element = document.querySelectorAll('.' + This.Defaults.background)[0];
+			bgProp.element = document.querySelectorAll(bakom.defaults.backgroundSelector)[0];
 			
-			if(BgProp.element){
-				BgProp.prop = _getBackgroundImageProperties(),
-				BgProp.pos = _getBackgroundBoxPosition();
+			if(bgProp.element){
+				bgProp.prop = _getBackgroundImageProperties(),
+				bgProp.pos = _getBackgroundBoxPosition();
 			}
 
 			else{
-				console.error('Unable to find background element ' + This.Defaults.background)
+				console.error('Unable to find background element ' + bakom.defaults.backgroundSelector)
 			}
 		},
 
-		GetText = function(){
-			var _element = document.querySelectorAll('.' + This.Defaults.text)[0];
+		//get text element properties
+		getText = function(){
+			var _element = document.querySelectorAll(bakom.defaults.textSelector)[0];
 			
 			if(_element){
-				TextEl = {
+				textEl = {
 					element : _element,
 					pos : _element.getBoundingClientRect()
 				}
 			}
 
 			else{
-				console.error('Unable to find text element ' + This.Defaults.text)
+				console.error('Unable to find text element ' + bakom.defaults.textSelector)
 			}
 		},
 
-		BuildSvg = function(){
+		//build the svgs (image and clip path)
+		buildSvg = function(){
+
+			//helper function for coneverting string to node
 			var _stringToNode = function(string){
 					var div = document.createElement('div');
 					div.innerHTML = string;
@@ -104,115 +128,86 @@ var Bakom = function(configure){
 				},
 			
 				_buildImage = function(){
-					var _image = '<svg width="' + TextEl.pos.width + '" height="' + TextEl.pos.height + '">' +
+					var _image = '<svg width="' + textEl.pos.width + '" height="' + textEl.pos.height + '">' +
 										'<image ' +  
-											'xlink:href="' + BgProp.prop.src +'"' +
-											'width="' + BgProp.prop.size.width + '"' +
-											'height="' + BgProp.prop.size.height + '"' +
-											'clip-path="url(#' + ClipPathId + ')"' +
-											'x="' + (BgProp.pos.left - TextEl.pos.left + BgProp.prop.x) + '"' +
-											'y="' + (BgProp.pos.top - TextEl.pos.top + BgProp.prop.y) + '"' +
+											'xlink:href="' + bgProp.prop.src +'"' +
+											'width="' + bgProp.prop.size.width + '"' +
+											'height="' + bgProp.prop.size.height + '"' +
+											'clip-path="url(#' + clipPathId + ')"' +
+											'x="' + (bgProp.pos.left - textEl.pos.left + bgProp.prop.x) + '"' +
+											'y="' + (bgProp.pos.top - textEl.pos.top + bgProp.prop.y) + '"' +
 											'>' +
 										'</image>' +
 									'</svg>';
-					OriginalText = TextEl.element.innerHTML;				
-					TextEl.element.innerHTML = '';
-					SVGs.image = _stringToNode(_image)					
-					TextEl.element.appendChild(SVGs.image);			
+
+					originalText = textEl.element.innerHTML;				
+					textEl.element.innerHTML = '';
+					svgs.image = _stringToNode(_image)					
+					textEl.element.appendChild(svgs.image);			
 				},
 
 				_buildClipPath = function(){
 					var _clipPath = '<svg>' + 
 										'<defs>' +
-											'<clipPath id="' + ClipPathId + '">' + 
-												'<text text-anchor="start" x="0" dy="' + This.Defaults.dy + '" class="' + This.Defaults.style + '">' + TextEl.element.innerHTML + '</text>' + 
+											'<clipPath id="' + clipPathId + '">' + 
+												'<text text-anchor="start" x="0" dy="' + bakom.defaults.dy + '" class="' + bakom.defaults.styleClass + '">' + textEl.element.innerHTML + '</text>' + 
 											'</clipPath>' +
 										'</defs>' +
 									'</svg>';
-					SVGs.clipPath = _stringToNode(_clipPath);									
-					document.body.appendChild(SVGs.clipPath)			
+
+					svgs.clipPath = _stringToNode(_clipPath);									
+					document.body.appendChild(svgs.clipPath)			
 				};
 
 			_buildClipPath();
 			_buildImage();
-			HasBeenDrawn = true;
+			hasBeenDrawn = true;
 		},
 
-		DeleteSVGs = function(){
-			for(var svg in SVGs){
-				SVGs[svg].parentNode.removeChild(SVGs[svg]);
+		//delete image and clip path svg
+		deleteSvgs = function(){
+			for(var svg in svgs){
+				svgs[svg].parentNode.removeChild(svgs[svg]);
 			}
 		},
 
-		ResetElement = function(){
-			TextEl.element.innerHTML = OriginalText;
+		//remove image svg and reset innertext
+		resetElement = function(){
+			textEl.element.innerHTML = originalText;
 		},
 
-		Init = function(configure){
-			Setup(configure);
-			GetBackground();
-			GetText();
-			BuildSvg();
+		//setup elements
+		init = function(configure){
+			setup(configure);
+			getBackground();
+			getText();
+			buildSvg();
 		},
 
-		Reset = function(){
-			if(HasBeenDrawn){
-				DeleteSVGs();
-				ResetElement();
+		//reset the elements to it's inital state
+		reset = function(){
+			if(hasBeenDrawn){
+				deleteSvgs();
+				resetElement();
 			}
 		};
 
-		Init(configure);
+		init(configure);
 
-	//api
-	this.reset = function(){
-		Reset()
-	};	
-	this.redraw = function(configure){
-			if(HasBeenDrawn){
-				Reset();
-				Init(configure);
-			}
+	/*
+		global api
+	*/
+
+	//reset the elements to it's inital state
+	bakom.reset = function(){
+		reset();
+	};
+
+	//recalculates the postions and redraws it
+	bakom.redraw = function(configure){
+		if(hasBeenDrawn){
+			reset();
+			init(configure);
 		}
-	this.print = function(){
-		/*console.log(This)
-  		console.log(ClipPathId)
-  		console.log(HasBeenDrawn)
-  		console.log(BgProp)
-  		console.log(TextEl)
-  		console.log(OriginalText)*/
-  		console.log(This.Defaults)
-		//console.log(SVGs)
 	}			
 }
-
-
-var test = new Bakom({
-	background : 'bakom-bg',
-	text : 'bakom-fg',
-	style : 'text',
-	dy : '0.9em' //https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/dy
-});
-
-test.print();
-
-//test.redraw();
-
-var test2 = new Bakom({
-	background : 'bakom-bg',
-	text : 'bakom-fg2',
-	style : 'text',
-	dy : '0.8em' //https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/dy
-});
-
-test.print();
-test2.print();
-
-
-
-
-
-
-
-
-
