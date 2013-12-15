@@ -1,7 +1,8 @@
 # bakom.js
-=======
 
 bakom.js makes it possible to make your text fully transparent allowing you to see right through it to the image below.
+
+Please note this is an early untested version. Please let me know any bugs you've found.
 
 ## How Do I Use It?
 ```html
@@ -22,7 +23,7 @@ Redraw your element.
 <script>
 	text.redraw();
 </script>
-
+```
 Reset your element
 
 ```html
@@ -44,7 +45,6 @@ Reset your element
 
 
 ##License
--------
 bakom.js is available under the [MIT license] (http://opensource.org/licenses/MIT).
 
 ### Download, Fork, Commit.
