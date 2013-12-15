@@ -2,7 +2,7 @@
 
 bakom.js makes it possible to make your text fully transparent allowing you to see right through it to the image below.
 
-Please note this is an early untested version. Please let me know any bugs you've found.
+Please note this is an early untested version. Currently works in latest version of Chrome and Safari.
 
 ## How Do I Use It?
 ```html
