@@ -2,17 +2,25 @@
 
 bakom.js makes it possible to make your text fully transparent allowing you to see right through it to the image below.
 
-Please note this is an early untested version. Currently works in latest version of Chrome and Safari.
+Please note this is an early untested version. Currently works in latest version of Chrome, Safari and Firefox*.
+
+*see known issues
 
 ## How Do I Use It?
 ```html
+<body id="background">
+...
+<h1 id="text">Transparent Text</h1>
+...
+</body>
+
 <script src="path/to/bakom.min.js"></script>
 <script>
 	var text = new Bakom({
 		backgroundSelector : '#background',
 		textSelector : '#text',
 		styleClass : 'text',
-		dy : '0.9em'
+		dy : '0.9em' //https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/dy
 	});
 </script>
 ```
@@ -35,7 +43,7 @@ Reset your element
 ## Known issues
 
 * a background image size have to be set (both height and width)
-* text align center and right currently not working
+* text align center and right currently not working in Firefox
 
 ## Changelog
 * `v 1.0` - Initial Release
