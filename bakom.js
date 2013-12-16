@@ -16,6 +16,7 @@ window.Bakom = function(configure){
   		//variables global to bakom
   		clipPathId = '',
   		hasBeenDrawn = false,
+  		hasCssSupport = false,
   		bgProp = {},
   		textEl, originalText,
   		svgs = {};
@@ -46,6 +47,10 @@ window.Bakom = function(configure){
 		  		_i++;
 		  	}
 		  	clipPathId = 'bakom-cp-' + _i;
+
+		  	//check if supports backgroundClip
+		  	var _testEl = document.createElement( "x-test" );
+		  	hasCssSupport = typeof _testEl.style.webkitBackgroundClip !== "undefined" && ( _testEl.style.webkitBackgroundClip = "text", _testEl.style.webkitBackgroundClip === "text" );
 		  	
 		},
 
@@ -53,30 +58,20 @@ window.Bakom = function(configure){
 		getBackground = function(){
 			var _getBackgroundImageProperties = function(){
 		    		var _src = '',
-		    			_x = '',
-		    			_y = '',
+		    			_xy = '',
 		    			_size = [];
 
-			        if (bgProp.element.currentStyle) {
-			        	_src = bgProp.element.currentStyle['background-image'];
-			        	_x = bgProp.element.currentStyle['background-position-x'];
-			        	_y = bgProp.element.currentStyle['background-position-y'];
-			        }
-
-			        else if(window.getComputedStyle) {
-			        	_src = document.defaultView.getComputedStyle(bgProp.element, null).getPropertyValue('background-image');
-			        	_x = document.defaultView.getComputedStyle(bgProp.element, null).getPropertyValue('background-position-x');
-			        	_y = document.defaultView.getComputedStyle(bgProp.element, null).getPropertyValue('background-position-y');
-			        	_size = document.defaultView.getComputedStyle(bgProp.element, null).getPropertyValue('background-size').split(' ');
-			        }
+		        	_src = document.defaultView.getComputedStyle(bgProp.element, null).getPropertyValue('background-image');
+		        	_xy = document.defaultView.getComputedStyle(bgProp.element, null).getPropertyValue('background-position').split(' ');
+		        	_size = document.defaultView.getComputedStyle(bgProp.element, null).getPropertyValue('background-size').split(' ');
 			        
 			        if(_src) _src = _src.slice(_src.indexOf('url(') + 4, _src.lastIndexOf(')'));
 			        else console.error('Unable to find a background image for ' + bgProp.element)
 
 			        return {
 			        	src : _src,
-			        	x : parseInt(_x, 10),
-			        	y : parseInt(_y, 10),
+			        	x : parseInt(_xy[0], 10),
+			        	y : parseInt(_xy[1], 10),
 			        	size : {
 			        			width : parseInt(_size[0], 10), 
 			        			height : parseInt(_size[1], 10)
@@ -130,7 +125,7 @@ window.Bakom = function(configure){
 				_buildImage = function(){
 					var _image = '<svg width="' + textEl.pos.width + '" height="' + textEl.pos.height + '">' +
 										'<image ' +  
-											'xlink:href="' + bgProp.prop.src +'"' +
+											'xlink:href=' + bgProp.prop.src +
 											'width="' + bgProp.prop.size.width + '"' +
 											'height="' + bgProp.prop.size.height + '"' +
 											'clip-path="url(#' + clipPathId + ')"' +
@@ -164,6 +159,28 @@ window.Bakom = function(configure){
 			hasBeenDrawn = true;
 		},
 
+		//add Background clip
+		setCSS = function(){
+			textEl.style = {};
+			textEl.style.backgroundPosition = textEl.element.style.backgroundPosition;
+			textEl.style.backgroundImage = textEl.element.style.backgroundImage;
+			textEl.style.webkitBackgroundClip = textEl.element.style.webkitBackgroundClip;
+			textEl.style.color = textEl.element.style.color;
+
+			textEl.element.style.backgroundPosition = (bgProp.pos.left - textEl.pos.left + bgProp.prop.x) + 'px ' + (bgProp.pos.top - textEl.pos.top + bgProp.prop.y) + 'px';
+			textEl.element.style.backgroundImage = 'url(' + bgProp.prop.src + ')';
+			textEl.element.style.webkitBackgroundClip = 'text';
+			textEl.element.style.color = 'rgba(0, 0, 0, 0)';
+			hasBeenDrawn = true;
+		},
+
+		// rest css on text element
+		unsetCSS = function(){
+			for(var attr in textEl.style){
+				textEl.element.style[attr] = textEl.style[attr];
+			}
+		}
+
 		//delete image and clip path svg
 		deleteSvgs = function(){
 			for(var svg in svgs){
@@ -181,14 +198,18 @@ window.Bakom = function(configure){
 			setup(configure);
 			getBackground();
 			getText();
-			buildSvg();
+			if(hasCssSupport) setCSS();
+			else buildSvg();
 		},
 
 		//reset the elements to it's inital state
 		reset = function(){
 			if(hasBeenDrawn){
-				deleteSvgs();
-				resetElement();
+				if(hasCssSupport) unsetCSS();
+				else {
+					deleteSvgs();
+					resetElement();
+				}
 			}
 		};
 
