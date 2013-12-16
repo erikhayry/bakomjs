@@ -10,7 +10,9 @@ Please note this is an early untested version. Currently works in latest version
 ```html
 <body id="background">
 ...
-<h1 id="text">Transparent Text</h1>
+<div class="box">
+	<h1 id="text">Transparent Text</h1>
+</div>
 ...
 </body>
 
