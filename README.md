@@ -2,7 +2,7 @@
 
 bakom.js makes it possible to make your text fully transparent allowing you to see right through it to the image below.
 
-Please note this is an early untested version. Currently works in latest version of Chrome, Safari and Firefox*.
+Please note this is an early untested version. Currently works in latest version of Chrome, Safari, IE and Firefox*.
 
 *see known issues
 
@@ -45,7 +45,8 @@ Reset your element
 ## Known issues
 
 * a background image size have to be set (both height and width)
-* text align center and right currently not working in Firefox
+* text align centera and right currently not working in Firefox and IE
+* multiple lines of text currently not working in Firefox and IE
 
 ## Changelog
 * `v 1.0` - Initial Release
