@@ -1,6 +1,7 @@
 
 /*
- * bakom.js 1.0
+ * @preserve
+ * bakom.js 1.1
  * http://erikportin.com/bakomjs
  *
  * Copyright 2013 Erik Portin
@@ -33,7 +34,7 @@ window.Bakom = function(configure){
 		//functions global to bakom
 		
 		//inital setup
-		setup = function(configure){
+		var setup = function(configure){
 			//get background element properties
 			var _getBackground = function(){
 
@@ -41,12 +42,10 @@ window.Bakom = function(configure){
 					/*
 						TODO: add support for position fixed, local and multiple images
 					*/
-			    		var _src = '',
+			    		var _src = document.defaultView.getComputedStyle(bgProp.element, null).getPropertyValue('background-image'),
 			    			_xy = '',
-			    			_size = [];
-
-			        	_src = document.defaultView.getComputedStyle(bgProp.element, null).getPropertyValue('background-image'),
-			        	_backgroundAttachment = document.defaultView.getComputedStyle(bgProp.element, null).getPropertyValue('background-attachment');
+			    			_size = [],
+			    			_backgroundAttachment = document.defaultView.getComputedStyle(bgProp.element, null).getPropertyValue('background-attachment');
 
 			        	if(!bakom.defaults.backgroundClipSupportOnly){
 			        		var _backgroundRepeat = document.defaultView.getComputedStyle(bgProp.element, null).getPropertyValue('background-repeat');
@@ -90,7 +89,6 @@ window.Bakom = function(configure){
 		    		},
 				
 					_getBackgroundBoxPosition = function(){
-						var _pos = bgProp.element.getBoundingClientRect();
 						return {
 							bottom: bgProp.element.getBoundingClientRect().bottom,
 							height: bgProp.element.getBoundingClientRect().height,
@@ -229,7 +227,7 @@ window.Bakom = function(configure){
 			for(var attr in textEl.style){
 				textEl.element.style[attr] = textEl.style[attr];
 			}
-		}
+		},
 
 		//delete image and clip path svg
 		deleteSvgs = function(){
