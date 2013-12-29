@@ -66,8 +66,8 @@ window.Bakom = function(configure){
 				        	bgProp.pos = _getBackgroundBoxPosition();
 
 				        	if(_backgroundAttachment === 'fixed'){
-				        		bgProp.pos.left = 0;
-				        		bgProp.pos.top = 0;
+				        		textEl.pos.top = 0;
+				        		textEl.pos.left = 0;
 				        	}
 
 					       	bgProp.prop = {
@@ -77,7 +77,8 @@ window.Bakom = function(configure){
 					        	size : {
 				        			width : parseInt(_size[0], 10), 
 				        			height : parseInt(_size[1], 10)
-					        		}
+					        		},
+					        	backgroundAttachment : _backgroundAttachment	
 					        }
 					        return true;
 				        }
@@ -128,7 +129,12 @@ window.Bakom = function(configure){
 				if(_element){
 					textEl = {
 						element : _element,
-						pos : _element.getBoundingClientRect()
+						pos : {
+							left : _element.getBoundingClientRect().left,
+							top : _element.getBoundingClientRect().top,
+							width : _element.getBoundingClientRect().width,
+							height : _element.getBoundingClientRect().height
+						}
 					}					
 					if(!bakom.defaults.styleClass) bakom.defaults.styleClass = _element.className.slice(0);
 					return true;
@@ -154,7 +160,7 @@ window.Bakom = function(configure){
 		  	}
 		  	clipPathId = 'bakom-cp-' + _i;
 
-		  	return _getBackground() && _getText();		  	
+		  	return _getText() && _getBackground();		  	
 		},
 
 		//build the svgs (image and clip path)
@@ -212,6 +218,7 @@ window.Bakom = function(configure){
 			textEl.style.webkitBackgroundClip = textEl.element.style.webkitBackgroundClip;
 			textEl.style.backgroundClip = textEl.element.style.backgroundClip;
 			textEl.style.color = textEl.element.style.color;
+			textEl.style.backgroundAttachment = textEl.element.style.backgroundAttachment;
 
 			textEl.element.style.backgroundPosition = (bgProp.pos.left - textEl.pos.left + bgProp.prop.x) + 'px ' + (bgProp.pos.top - textEl.pos.top + bgProp.prop.y) + 'px';
 			textEl.element.style.backgroundSize = bgProp.prop.size.width + 'px ' + bgProp.prop.size.height + 'px';
@@ -219,6 +226,8 @@ window.Bakom = function(configure){
 			textEl.element.style.webkitBackgroundClip = 'text';
 			textEl.element.style.backgroundClip = 'text';
 			textEl.element.style.color = 'rgba(0, 0, 0, 0)';
+			textEl.element.style.backgroundAttachment = bgProp.prop.backgroundAttachment;
+			
 			hasBeenDrawn = true;
 		},
 
