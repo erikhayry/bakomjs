@@ -23,14 +23,15 @@ module.exports = function(grunt) {
                 spawn: false
             },
           },
+        },
+        karma: {
+          unit: {
+            configFile: 'karma.conf.js'
+          }
         }
     });
 
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-watch');
-
-
-    grunt.registerTask('default', ['uglify']);
-
-
+    grunt.loadNpmTasks('grunt-karma');
 };

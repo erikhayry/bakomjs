@@ -18,6 +18,7 @@
     "karma-phantomjs-launcher": "~0.1.1",
     "karma": "~0.10.9",
     "karma-safari-launcher": "~0.1.1",
-    "phantomjs": "~1.9.1-0"
+    "phantomjs": "~1.9.1-0",
+    "grunt-karma": "~0.6.2"
   }
 }
