@@ -1,3 +1,5 @@
+<img src="https://www.codeship.io/projects/2da6c850-5551-0131-67f6-2237450a4507/status"/>
+
 # bakom.js
 =======
 
