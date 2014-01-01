@@ -263,8 +263,8 @@ window.Bakom = function(){
 		},
 
 		//setup elements
-		init = function(){
-			if(setup(conf)){
+		init = function(configure){
+			if(setup(configure)){
 				if(hasCssSupport) setCSS();
 				else if(!defaults.backgroundClipSupportOnly) {
 					if(!defaults.dy && defaults.debug){
@@ -310,8 +310,7 @@ window.Bakom = function(){
 
 	//initalize	
 	bakom.init = function(configure){
-		conf = configure;
-		if((conf.backgroundClipSupportOnly && hasCssSupport) || !conf.backgroundClipSupportOnly) init();
+		if((configure.backgroundClipSupportOnly !== false && hasCssSupport) || configure.backgroundClipSupportOnly === false) init(configure);
 		setState();
 		return bakom;
 	}
@@ -326,9 +325,8 @@ window.Bakom = function(){
 	//recalculates the postions and redraws it
 	bakom.redraw = function(configure){
 		if(hasBeenDrawn){
-			conf = configure;
 			reset();
-			init(conf);
+			init(configure);
 		}
 		setState();
 		return bakom;
