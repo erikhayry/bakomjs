@@ -10,9 +10,10 @@
  */
 
 //define the global Bakom Variable as a class.
-window.Bakom = function(configure){
+window.Bakom = function(){
 
   	var bakom = this,
+  		conf = {},
 		hasBackgroundClipSupport = function(){
 			//check for background clip support
 			var	_testEl = document.createElement( "x-test" );			
@@ -35,11 +36,13 @@ window.Bakom = function(configure){
 			styleClass : '',
 			dy : '', //https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/dy
 			dx : '', //https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/dx
-			backgroundClipSupportOnly : true
+			backgroundClipSupportOnly : true,
+			debug : false
 		};
 		
 		//inital setup
-		var setup = function(configure){
+		var setup = function(conf){
+
 			//get background element properties
 			var _getBackground = function(){
 
@@ -54,11 +57,12 @@ window.Bakom = function(configure){
 
 			        	if(!defaults.backgroundClipSupportOnly){
 			        		var _backgroundRepeat = document.defaultView.getComputedStyle(bgProp.element, null).getPropertyValue('background-repeat');
-			        		if(_backgroundRepeat !== 'no-repeat'){
+			        		
+			        		if(_backgroundRepeat !== 'no-repeat' && defaults.debug){
 			        			console.warn('BAKOM.JS: background-repeat is set to "' + _backgroundRepeat + '" which can cause issues for browsers not supporting Background Clip. Set property to "no-repeat" to avoid this warning.')
 			        		}
 
-			        		if(_backgroundAttachment !== 'scroll'){
+			        		if(_backgroundAttachment !== 'scroll' && defaults.debug){
 			        			console.warn('BAKOM.JS: background-attachment is set to "' + _backgroundAttachment + '" which is not supported. Set property to "scroll" to avoid this warning.')
 			        		}
 			        	}
@@ -73,6 +77,9 @@ window.Bakom = function(configure){
 				        	if(_backgroundAttachment === 'fixed'){
 				        		textEl.pos.top = 0;
 				        		textEl.pos.left = 0;
+
+				        		bgProp.pos.top = 0;
+				        		bgProp.pos.left = 0;
 				        	}
 
 					       	bgProp.prop = {
@@ -152,9 +159,9 @@ window.Bakom = function(configure){
 			}
 
 			//update defaults
-		  	for (var attrname in configure) {
-		  		if (defaults.hasOwnProperty(attrname) && configure.hasOwnProperty(attrname)) { 
-		  			defaults[attrname] = configure[attrname];
+		  	for (var attrname in conf) {
+		  		if (defaults.hasOwnProperty(attrname) && conf.hasOwnProperty(attrname)) { 
+		  			defaults[attrname] = conf[attrname];
 		  		} 
 		  	}
 
@@ -201,7 +208,7 @@ window.Bakom = function(configure){
 					var _clipPath = '<svg style="position: absolute; top: 0; left:0; z-index: -1;">' + 
 										'<defs>' +
 											'<clipPath id="' + clipPathId + '">' + 
-												'<text text-anchor="start" x="0" dy="' + defaults.dy + 'dx="' + defaults.dx + '" class="' + defaults.styleClass + '">' + textEl.element.innerHTML + '</text>' + 
+												'<text text-anchor="start" x="0" dy="' + defaults.dy + '" dx="' + defaults.dx + '" class="' + defaults.styleClass + '">' + textEl.element.innerHTML + '</text>' + 
 											'</clipPath>' +
 										'</defs>' +
 									'</svg>';
@@ -236,7 +243,7 @@ window.Bakom = function(configure){
 			hasBeenDrawn = true;
 		},
 
-		// rest css on text element
+		//rest css on text element
 		unsetCSS = function(){
 			for(var attr in textEl.style){
 				textEl.element.style[attr] = textEl.style[attr];
@@ -256,15 +263,19 @@ window.Bakom = function(configure){
 		},
 
 		//setup elements
-		init = function(configure){
-			if(setup(configure)){
+		init = function(){
+			if(setup(conf)){
 				if(hasCssSupport) setCSS();
-				else if(!defaults.backgroundClipSupportOnly) buildSvg();				
+				else if(!defaults.backgroundClipSupportOnly) {
+					if(!defaults.dy && defaults.debug){
+			        	console.warn('BAKOM.JS: no dy value set. Please read the documentation for bakom.js to find out why this isn\'t a good idea.');
+			        }
+					buildSvg();
+				};				
 			}
 			else{
 				console.error('BAKOM.JS: Something went wrong in the setup. Either the background or text element selector wasn\'t set or one of the element wasn\'t found');
 			}
-
 		},
 
 		//reset the elements to it's inital state
@@ -276,29 +287,50 @@ window.Bakom = function(configure){
 					resetElement();
 				}
 			}
+		},
+
+		//update state
+		setState = function(){
+			bakom.hasBeenDrawn = hasBeenDrawn;
+			bakom.hasBackgroundClipSupport = hasCssSupport;
+			bakom.svgs = svgs;
+
+			if(textEl) bakom.textElement = textEl.element;
+			else bakom.textElement = undefined;
+			
+			if(bgProp) bakom.backgroundElement = bgProp.element;
+			else bakom.backgroundElement = undefined;
 		};
 
-		//initalize	
-		if((configure.backgroundClipSupportOnly && hasCssSupport) || !configure.backgroundClipSupportOnly) init(configure);
+		setState();
 
 	/*
 		global api
 	*/
 
+	//initalize	
+	bakom.init = function(configure){
+		conf = configure;
+		if((conf.backgroundClipSupportOnly && hasCssSupport) || !conf.backgroundClipSupportOnly) init();
+		setState();
+		return bakom;
+	}
+
 	//reset the elements to it's inital state
 	bakom.reset = function(){
 		reset();
+		setState();
+		return bakom;
 	};
 
 	//recalculates the postions and redraws it
 	bakom.redraw = function(configure){
 		if(hasBeenDrawn){
+			conf = configure;
 			reset();
-			init(configure);
+			init(conf);
 		}
-	}
-
-	bakom.hasBackgroundClipSupport = function(){
-		return hasCssSupport;
+		setState();
+		return bakom;
 	}
 }
