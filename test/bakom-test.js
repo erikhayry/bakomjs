@@ -1,4 +1,5 @@
-describe('Bakom.js init', function () {  
+describe('Bakom.js init', function () {
+	//get some html  
 	beforeEach(function(){
 		window.__html__ = window.__html__ || {};
 		document.body.innerHTML = __html__['test/bakom-test.html'];    	
@@ -22,38 +23,40 @@ describe('Bakom.js init', function () {
     })  
 
     describe('bakom.init', function(){
-    	var text1, text2;	
+    	var textCSSonly, textWithSvgSupport;	
     	
     	beforeEach(function(){
-    		text1 = new Bakom().init({
+    		
+    		textCSSonly = new Bakom().init('.text', {
 				backgroundSelector : '.holder',
-				textSelector : '.text'
 			});
 
-			text2 = new Bakom().init({
+			textWithSvgSupport = new Bakom().init('.text', {
 				backgroundSelector : '.holder',
-				textSelector : '.text',
 				backgroundClipSupportOnly : false
-			});		
+			});
+
+
     	});
 
     		
 		describe('background clip Support Only', function(){
 			it('should have been defined and set', function(){
 
-	    		expect(text1.hasBackgroundClipSupport).toBeDefined();
+	    		expect(textCSSonly.hasBackgroundClipSupport).toBeDefined();
 
-	    		if(text1.hasBackgroundClipSupport){
-	    			expect(text1.hasBeenDrawn).toEqual(true);
-	    			expect(text1.svgs).toEqual({});	
-	    			expect(text1.backgroundElement).toBeDefined();
-	    			expect(text1.textElement).toBeDefined();
+	    		//if background clip is supported
+	    		if(textCSSonly.hasBackgroundClipSupport){
+	    			expect(textCSSonly.hasBeenDrawn).toEqual(true);
+	    			expect(textCSSonly.svgs).toEqual({});	
+	    			expect(textCSSonly.backgroundElement).toBeDefined();
+	    			expect(textCSSonly.textElement).toBeDefined();
 	    		}
 
 	    		else{
-	    			expect(text1.hasBeenDrawn).toEqual(false);
-	    			expect(text1.backgroundElement).not.toBeDefined();
-	    			expect(text1.textElement).not.toBeDefined();
+	    			expect(textCSSonly.hasBeenDrawn).toEqual(false);
+	    			expect(textCSSonly.backgroundElement).not.toBeDefined();
+	    			expect(textCSSonly.textElement).not.toBeDefined();
 	    		}
     		})
 		})
@@ -61,16 +64,16 @@ describe('Bakom.js init', function () {
 		describe('background clip and SVG Support ', function(){
 			it('should have been defined and set', function(){
 
-	    		expect(text2.hasBeenDrawn).toEqual(true)
+	    		expect(textWithSvgSupport.hasBeenDrawn).toEqual(true)
 
-	    		if(text2.hasBackgroundClipSupport){
-	    			expect(text2.svgs).toEqual({});	
+	    		if(textWithSvgSupport.hasBackgroundClipSupport){
+	    			expect(textWithSvgSupport.svgs).toEqual({}); //no svgs should have been set	
 	    		}
 	    		
 	    		else{
-	    			expect(text2.svgs).not.toEqual({});
-	    			expect(text2.svgs.clipPath).toEqual(jasmine.any(Object));
-	    			expect(text2.svgs.image).toEqual(jasmine.any(Object));
+	    			expect(textWithSvgSupport.svgs).not.toEqual({});
+	    			expect(textWithSvgSupport.svgs.clipPath).toEqual(jasmine.any(Object)); //a clip path element should have been created
+	    			expect(textWithSvgSupport.svgs.image).toEqual(jasmine.any(Object)); //an image element should have been created
 	    		}
 	    	})
     	})   		

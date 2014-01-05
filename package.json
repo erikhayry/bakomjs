@@ -1,7 +1,10 @@
 {
   "name": "bakom.js",
   "version": "0.1.1",
-  "repository": "https://github.com/erikportin/bakomjs.git",
+  "repository": {
+    "url": "https://github.com/erikportin/bakomjs.git",
+    "type": "git"
+  },
   "devDependencies": {
     "grunt": "~0.4.1",
     "grunt-cli": "~0.1.11",

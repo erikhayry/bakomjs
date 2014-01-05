@@ -9,7 +9,9 @@
  * https://github.com/erikportin/bakomjs/blob/master/LICENCE.md
  */
 
-//define the global Bakom Variable as a class.
+/**
+ * define the global Bakom Variable as a class.
+ */
 window.Bakom = function(){
 
   	var bakom = this,
@@ -41,7 +43,7 @@ window.Bakom = function(){
 		};
 		
 		//inital setup
-		var setup = function(conf){
+		var setup = function(textElementSelector, configure){
 
 			//get background element properties
 			var _getBackground = function(){
@@ -131,12 +133,12 @@ window.Bakom = function(){
 
 			//get text element properties
 			_getText = function(){
-				if(!defaults.textSelector) {
+				if(!textElementSelector) {
 					console.error('BAKOM.JS: Text element selector not set' + defaults.textSelector);
 					return false;
 				}
 
-				var _element = document.querySelectorAll(defaults.textSelector)[0];
+				var _element = document.querySelectorAll(textElementSelector)[0];
 				
 				if(_element){
 					textEl = {
@@ -159,9 +161,9 @@ window.Bakom = function(){
 			}
 
 			//update defaults
-		  	for (var attrname in conf) {
-		  		if (defaults.hasOwnProperty(attrname) && conf.hasOwnProperty(attrname)) { 
-		  			defaults[attrname] = conf[attrname];
+		  	for (var attrname in configure) {
+		  		if (defaults.hasOwnProperty(attrname) && configure.hasOwnProperty(attrname)) { 
+		  			defaults[attrname] = configure[attrname];
 		  		} 
 		  	}
 
@@ -263,8 +265,8 @@ window.Bakom = function(){
 		},
 
 		//setup elements
-		init = function(configure){
-			if(setup(configure)){
+		init = function(textElementSelector, configure){
+			if(setup(textElementSelector, configure)){
 				if(hasCssSupport) setCSS();
 				else if(!defaults.backgroundClipSupportOnly) {
 					if(!defaults.dy && defaults.debug){
@@ -289,7 +291,9 @@ window.Bakom = function(){
 			}
 		},
 
-		//update state
+		/**
+		 * updates the global states variables
+		 */
 		setState = function(){
 			bakom.hasBeenDrawn = hasBeenDrawn;
 			bakom.hasBackgroundClipSupport = hasCssSupport;
@@ -302,33 +306,57 @@ window.Bakom = function(){
 			else bakom.backgroundElement = undefined;
 		};
 
+		// set the blobal state variables on initialization
 		setState();
 
 	/*
 		global api
 	*/
 
-	//initalize	
-	bakom.init = function(configure){
-		if((configure.backgroundClipSupportOnly !== false && hasCssSupport) || configure.backgroundClipSupportOnly === false) init(configure);
-		setState();
-		return bakom;
-	}
 
-	//reset the elements to it's inital state
+	/**
+	 * bakom.init builds a new bakom element
+	 * @param  {String} textElementSelector
+	 * @param  {object} configure Background element selector, style class string, dy variable, dx variable, backgroundClipSupportOnly boolean and debug boolean
+	 * @return {object} the bakom object itself
+	 */
+	bakom.init = function(textElementSelector, configure){
+		/*
+			build new bakom if backgroundClipSupportOnly and the browser supports it OR if !backgroundClipSupportOnly
+		 */
+		if((configure.backgroundClipSupportOnly !== false && hasCssSupport) || configure.backgroundClipSupportOnly === false) init(textElementSelector, configure);
+		
+		//update gobal state TODO do something more clever so I don't have to remember to do this everywhere 
+		setState();
+
+		return bakom;
+	};
+
+	/**
+	 * bakom.reset if a bakom elements been built reset it to its initial state
+	 * @return {object} the bakom object itself
+	 */
 	bakom.reset = function(){
+		
 		reset();
+
+		//update gobal state TODO do something more clever so I don't have to remember to do this everywhere 
 		setState();
 		return bakom;
 	};
 
-	//recalculates the postions and redraws it
-	bakom.redraw = function(configure){
+	/**
+	 * bakom.redraw if a bakom elements been built its values get recalculated and new values applied
+	 * @param  {String} textElementSelector
+	 * @param  {object} configure Background element selector, style class string, dy variable, dx variable, backgroundClipSupportOnly boolean and debug boolean
+	 * @return {object} the bakom object itself
+	 */
+	bakom.redraw = function(textElementSelector, configure){
 		if(hasBeenDrawn){
 			reset();
-			init(configure);
+			init(textElementSelector, configure);
 		}
 		setState();
 		return bakom;
-	}
+	};
 }
