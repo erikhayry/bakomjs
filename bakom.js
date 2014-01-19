@@ -19,6 +19,7 @@ window.Bakom = function(){
   		//background and text properties
   		BgProperties = {},
   		TextProperties, 
+  		TextSelector,
 
   		//varaibales only needed when using svgs
   		ClipPathId = '', //id connecting svg and clip path
@@ -27,7 +28,6 @@ window.Bakom = function(){
   		//set default values
   		Defaults = {
 			backgroundSelector : 'body',
-			textSelector : '',
 			styleClass : '',
 			dy : '', //https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/dy
 			dx : '', //https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/dx
@@ -341,6 +341,7 @@ window.Bakom = function(){
 		 * @param  {Object} configure           Configure setup
 		 */
 		init = function(textElementSelector, configure){
+			TextSelector = textElementSelector;
 			
 			//if the setup success, build css or svg
 			if(setup(textElementSelector, configure)){
@@ -425,12 +426,12 @@ window.Bakom = function(){
 	 * @param  {object} Configure Configure Background element selector, style class string, dy variable, dx variable, backgroundClipSupportOnly boolean and debug boolean
 	 * @return {object} Bakom The bakom object itself
 	 */
-	bakom.redraw = function(textElementSelector, configure){
+	bakom.redraw = function(){
 		if(bakom.hasBeenDrawn){
+
 			reset();
-			init(textElementSelector, configure);
+			init(TextSelector, Defaults);
 		}
-		setState();
 		return bakom;
 	};
 

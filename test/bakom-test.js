@@ -78,4 +78,10 @@ describe('Bakom.js init', function () {
 	    	})
     	})   		
     })
+
+	/*
+		TODO add tests for reset and redraw
+	 */
+
+
 });  
