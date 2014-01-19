@@ -15,24 +15,17 @@
 window.Bakom = function(){
 
   	var bakom = this,
-  		conf = {},
-		hasBackgroundClipSupport = function(){
-			//check for background clip support
-			var	_testEl = document.createElement( "x-test" );			
-			return 	typeof _testEl.style.webkitBackgroundClip !== "undefined" && ( _testEl.style.webkitBackgroundClip = "text", _testEl.style.webkitBackgroundClip === "text" ) ||
-					typeof _testEl.style.backgroundClip !== "undefined" && ( _testEl.style.backgroundClip = "text", _testEl.style.backgroundClip === "text" )	
-		},
 
-  		//variables global to bakom
-  		clipPathId = '',
-  		hasBeenDrawn = false,
-  		hasCssSupport = hasBackgroundClipSupport(),
-  		bgProp = {},
-  		textEl, originalText,
-  		svgs = {},
+  		//background and text properties
+  		BgProperties = {},
+  		TextProperties, 
+
+  		//varaibales only needed when using svgs
+  		ClipPathId = '', //id connecting svg and clip path
+  		OriginalText, //store the original text of element to be able to reset later
 
   		//set default values
-  		defaults = {
+  		Defaults = {
 			backgroundSelector : 'body',
 			textSelector : '',
 			styleClass : '',
@@ -42,49 +35,88 @@ window.Bakom = function(){
 			debug : false
 		};
 		
-		//inital setup
-		var setup = function(textElementSelector, configure){
+		 
+  		/**
+  		 * tests if the browser supports background clip support
+  		 * @return {Boolean}
+  		 */
+		var hasBackgroundClipSupport = function(){
+			//check for background clip support
+			var	_testEl = document.createElement( "x-test" );			
+			return 	typeof _testEl.style.webkitBackgroundClip !== "undefined" && ( _testEl.style.webkitBackgroundClip = "text", _testEl.style.webkitBackgroundClip === "text" ) ||
+					typeof _testEl.style.backgroundClip !== "undefined" && ( _testEl.style.backgroundClip = "text", _testEl.style.backgroundClip === "text" )	
+		}, 
 
-			//get background element properties
-			var _getBackground = function(){
+		/**
+		 * setup background element and text element properties if they exists and are well formatted
+		 *
+		 * 	Available Configure settings and Defaults 
+		 * 	backgroundSelector : 'body',
+			textSelector : '',
+			styleClass : '',
+			dy : '',
+			dx : '',
+			backgroundClipSupportOnly : true,
+			debug : false
+		 * 
+		 * @param  {String} textElementSelector Selector for text element
+		 * @param  {Object} configure           Configure setup
+		 * @return {Boolean} success            setup done
+		 */
+		setup = function(textElementSelector, configure){
 
-				var _getBackgroundImageProperties = function(){
+			/**
+			 * get background of background element
+			 * @return {Boolean} success Background properties set
+			 */
+			var _setBackground = function(){
+
+				/**
+				 * set background image properties
+				 * @return {Boolean} success Background Image properties set
+				 */
+				var _setBackgroundImageProperties = function(){
+					
 					/*
-						TODO: add support for position fixed, local and multiple images
+						TODO: add support for local and multiple images
 					*/
-			    		var _src = document.defaultView.getComputedStyle(bgProp.element, null).getPropertyValue('background-image'),
+			    		var _src = document.defaultView.getComputedStyle(BgProperties.element, null).getPropertyValue('background-image'),
 			    			_xy = '',
 			    			_size = [],
-			    			_backgroundAttachment = document.defaultView.getComputedStyle(bgProp.element, null).getPropertyValue('background-attachment');
+			    			_backgroundAttachment = document.defaultView.getComputedStyle(BgProperties.element, null).getPropertyValue('background-attachment');
 
-			        	if(!defaults.backgroundClipSupportOnly){
-			        		var _backgroundRepeat = document.defaultView.getComputedStyle(bgProp.element, null).getPropertyValue('background-repeat');
+			    		//for non background clip support check what type of background repeat and attachment properties values	are set
+			        	if(!Defaults.backgroundClipSupportOnly){
+			        		var _backgroundRepeat = document.defaultView.getComputedStyle(BgProperties.element, null).getPropertyValue('background-repeat');
 			        		
-			        		if(_backgroundRepeat !== 'no-repeat' && defaults.debug){
+			        		if(_backgroundRepeat !== 'no-repeat' && Defaults.debug){
 			        			console.warn('BAKOM.JS: background-repeat is set to "' + _backgroundRepeat + '" which can cause issues for browsers not supporting Background Clip. Set property to "no-repeat" to avoid this warning.')
 			        		}
 
-			        		if(_backgroundAttachment !== 'scroll' && defaults.debug){
+			        		if(_backgroundAttachment !== 'scroll' && Defaults.debug){
 			        			console.warn('BAKOM.JS: background-attachment is set to "' + _backgroundAttachment + '" which is not supported. Set property to "scroll" to avoid this warning.')
 			        		}
 			        	}
 				     
+				     	//if background image get url
 				        if(_src && _src !== 'none') {
-				        	_xy = document.defaultView.getComputedStyle(bgProp.element, null).getPropertyValue('background-position').split(' ');
-			        		_size = document.defaultView.getComputedStyle(bgProp.element, null).getPropertyValue('background-size').split(' ');
+				        	_xy = document.defaultView.getComputedStyle(BgProperties.element, null).getPropertyValue('background-position').split(' ');
+			        		_size = document.defaultView.getComputedStyle(BgProperties.element, null).getPropertyValue('background-size').split(' ');
 				        	_src = _src.slice(_src.indexOf('url(') + 4, _src.lastIndexOf(')'));
 
-				        	bgProp.pos = _getBackgroundBoxPosition();
+				        	BgProperties.pos = _getBackgroundBoxPosition();
 
+				        	//if position fixed reset top and left pos to 0 to make it work.
 				        	if(_backgroundAttachment === 'fixed'){
-				        		textEl.pos.top = 0;
-				        		textEl.pos.left = 0;
+				        		TextProperties.pos.top = 0;
+				        		TextProperties.pos.left = 0;
 
-				        		bgProp.pos.top = 0;
-				        		bgProp.pos.left = 0;
+				        		BgProperties.pos.top = 0;
+				        		BgProperties.pos.left = 0;
 				        	}
 
-					       	bgProp.prop = {
+				        	//sett all properties to global variable
+					       	BgProperties.prop = {
 					        	src : _src,
 					        	x : parseInt(_xy[0], 10),
 					        	y : parseInt(_xy[1], 10),
@@ -94,54 +126,60 @@ window.Bakom = function(){
 					        		},
 					        	backgroundAttachment : _backgroundAttachment	
 					        }
+
 					        return true;
 				        }
 
+				        //if no image print error and return false
 				        else {				    
-				        	console.error('BAKOM.JS: Unable to find a background image for ' + bgProp.element);
+				        	console.error('BAKOM.JS: Unable to find a background image for ' + BgProperties.element);
 				        	return false;
 				        }
 		    		},
 				
 					_getBackgroundBoxPosition = function(){
 						return {
-							bottom: bgProp.element.getBoundingClientRect().bottom,
-							height: bgProp.element.getBoundingClientRect().height,
-							left: bgProp.element.getBoundingClientRect().left,
-							right: bgProp.element.getBoundingClientRect().right,
-							top: bgProp.element.getBoundingClientRect().top,
-							width: bgProp.element.getBoundingClientRect().width
+							bottom: BgProperties.element.getBoundingClientRect().bottom,
+							height: BgProperties.element.getBoundingClientRect().height,
+							left: BgProperties.element.getBoundingClientRect().left,
+							right: BgProperties.element.getBoundingClientRect().right,
+							top: BgProperties.element.getBoundingClientRect().top,
+							width: BgProperties.element.getBoundingClientRect().width
 						};
 					};
 
-				if(!defaults.backgroundSelector) {
+				if(!Defaults.backgroundSelector) {
 					console.error('BAKOM.JS: Background element selector not set');
 					return false;
 				}
 				
-				bgProp.element = document.querySelectorAll(defaults.backgroundSelector)[0];
+				BgProperties.element = bakom.backgroundElement = document.querySelectorAll(Defaults.backgroundSelector)[0];
 				
-				if(bgProp.element){
-					 return _getBackgroundImageProperties();
+				if(BgProperties.element){
+					 return _setBackgroundImageProperties();
 				}
 
 				else{
-					console.error('BAKOM.JS: Unable to find background element ' + defaults.backgroundSelector)
+					console.error('BAKOM.JS: Unable to find background element ' + Defaults.backgroundSelector)
 					return false;
 				}
 			},
 
-			//get text element properties
-			_getText = function(){
+			/**
+			 * set text element properties
+			 * @return {Boolean} success Text elem properties set
+			 */
+			_setText = function(){
 				if(!textElementSelector) {
-					console.error('BAKOM.JS: Text element selector not set' + defaults.textSelector);
+					console.error('BAKOM.JS: Text element selector not set');
 					return false;
 				}
 
-				var _element = document.querySelectorAll(textElementSelector)[0];
+				var _element = bakom.textElement = document.querySelectorAll(textElementSelector)[0];
 				
 				if(_element){
-					textEl = {
+					// set text properties
+					TextProperties = {
 						element : _element,
 						pos : {
 							left : _element.getBoundingClientRect().left,
@@ -150,213 +188,250 @@ window.Bakom = function(){
 							height : _element.getBoundingClientRect().height
 						}
 					}					
-					if(!defaults.styleClass) defaults.styleClass = _element.className.slice(0);
+					if(!Defaults.styleClass) Defaults.styleClass = _element.className.slice(0);
 					return true;
 				}
 
 				else{
-					console.error('BAKOM.JS: Unable to find text element ' + defaults.textSelector);
+					console.error('BAKOM.JS: Unable to find text element ' + Defaults.textSelector);
 					return false;
 				}
 			}
 
-			//update defaults
+			//update Defaults
 		  	for (var attrname in configure) {
-		  		if (defaults.hasOwnProperty(attrname) && configure.hasOwnProperty(attrname)) { 
-		  			defaults[attrname] = configure[attrname];
+		  		if (Defaults.hasOwnProperty(attrname) && configure.hasOwnProperty(attrname)) { 
+		  			Defaults[attrname] = configure[attrname];
 		  		} 
 		  	}
 
 		  	//get a unique id for the clip path
 		  	var _i = 0;
+		  	
 		  	while(document.getElementById('bakom-cp-' + _i)){
 		  		_i++;
 		  	}
-		  	clipPathId = 'bakom-cp-' + _i;
 
-		  	return _getText() && _getBackground();		  	
+		  	ClipPathId = 'bakom-cp-' + _i;
+
+		  	return _setText() && _setBackground();		  	
 		},
 
-		//build the svgs (image and clip path)
+		/**
+		 * build svg text and clippath element
+		 */
 		buildSvg = function(){
 
-			//helper function for coneverting string to node
+			/**
+			 * convert string to html node
+			 * @param  {String} string Template string
+			 * @return {Object} node   Template as html node
+			 */
 			var _stringToNode = function(string){
-					var div = document.createElement('div');
-					div.innerHTML = string;
-					return div.firstChild;	
+					var _div = document.createElement('div');
+					_div.innerHTML = string;
+					return _div.firstChild;	
 				},
-			
-				_buildImage = function(){
-					var _image = '<svg width="' + textEl.pos.width + '" height="' + textEl.pos.height + '">' +
-										'<image ' +  
-											'xlink:href=' + bgProp.prop.src +
-											'width="' + bgProp.prop.size.width + '"' +
-											'height="' + bgProp.prop.size.height + '"' +
-											'clip-path="url(#' + clipPathId + ')"' +
-											'x="' + (bgProp.pos.left - textEl.pos.left + bgProp.prop.x) + '"' +
-											'y="' + (bgProp.pos.top - textEl.pos.top + bgProp.prop.y) + '"' +
-											'>' +
-										'</image>' +
-									'</svg>';
+			/**
+			 * Stores orginal text, builds svg image and replaces text with it
+			 */
+			_buildImage = function(){
+				var _image = '<svg width="' + TextProperties.pos.width + '" height="' + TextProperties.pos.height + '">' +
+									'<image ' +  
+										'xlink:href=' + BgProperties.prop.src +
+										'width="' + BgProperties.prop.size.width + '"' +
+										'height="' + BgProperties.prop.size.height + '"' +
+										'clip-path="url(#' + ClipPathId + ')"' +
+										'x="' + (BgProperties.pos.left - TextProperties.pos.left + BgProperties.prop.x) + '"' +
+										'y="' + (BgProperties.pos.top - TextProperties.pos.top + BgProperties.prop.y) + '"' +
+										'>' +
+									'</image>' +
+								'</svg>';
 
-					originalText = textEl.element.innerHTML;				
-					textEl.element.innerHTML = '';
-					svgs.image = _stringToNode(_image)					
-					textEl.element.appendChild(svgs.image);			
-				},
+				OriginalText = TextProperties.element.innerHTML;				
+				TextProperties.element.innerHTML = '';
+				bakom.svgs.image = _stringToNode(_image)					
+				TextProperties.element.appendChild(bakom.svgs.image);			
+			},
 
-				_buildClipPath = function(){
-					var _clipPath = '<svg style="position: absolute; top: 0; left:0; z-index: -1;">' + 
-										'<defs>' +
-											'<clipPath id="' + clipPathId + '">' + 
-												'<text text-anchor="start" x="0" dy="' + defaults.dy + '" dx="' + defaults.dx + '" class="' + defaults.styleClass + '">' + textEl.element.innerHTML + '</text>' + 
-											'</clipPath>' +
-										'</defs>' +
-									'</svg>';
+			/**
+			 * Build clip path and attach it to body
+			 * @return {[type]} [description]
+			 */
+			_buildClipPath = function(){
+				var _clipPath = '<svg style="position: absolute; top: 0; left:0; z-index: -1;">' + 
+									'<defs>' +
+										'<clipPath id="' + ClipPathId + '">' + 
+											'<text text-anchor="start" x="0" dy="' + Defaults.dy + '" dx="' + Defaults.dx + '" class="' + Defaults.styleClass + '">' + TextProperties.element.innerHTML + '</text>' + 
+										'</clipPath>' +
+									'</defs>' +
+								'</svg>';
 
-					svgs.clipPath = _stringToNode(_clipPath);									
-					document.body.appendChild(svgs.clipPath)			
-				};
+				bakom.svgs.clipPath = _stringToNode(_clipPath);									
+				document.body.appendChild(bakom.svgs.clipPath)			
+			};
 
 			_buildClipPath();
 			_buildImage();
-			hasBeenDrawn = true;
+
+			bakom.hasBeenDrawn = true;
 		},
 
-		//add Background clip
-		setCSS = function(){
-			textEl.style = {};
-			textEl.style.backgroundPosition = textEl.element.style.backgroundPosition;
-			textEl.style.backgroundImage = textEl.element.style.backgroundImage;
-			textEl.style.webkitBackgroundClip = textEl.element.style.webkitBackgroundClip;
-			textEl.style.backgroundClip = textEl.element.style.backgroundClip;
-			textEl.style.color = textEl.element.style.color;
-			textEl.style.backgroundAttachment = textEl.element.style.backgroundAttachment;
+		/**
+		 * Saves original css values and replace them with the new ones
+		 */
+		buildCSS = function(){
+			TextProperties.style = {};
+			TextProperties.style.backgroundPosition = TextProperties.element.style.backgroundPosition;
+			TextProperties.style.backgroundImage = TextProperties.element.style.backgroundImage;
+			TextProperties.style.webkitBackgroundClip = TextProperties.element.style.webkitBackgroundClip;
+			TextProperties.style.backgroundClip = TextProperties.element.style.backgroundClip;
+			TextProperties.style.color = TextProperties.element.style.color;
+			TextProperties.style.backgroundAttachment = TextProperties.element.style.backgroundAttachment;
 
-			textEl.element.style.backgroundPosition = (bgProp.pos.left - textEl.pos.left + bgProp.prop.x) + 'px ' + (bgProp.pos.top - textEl.pos.top + bgProp.prop.y) + 'px';
-			textEl.element.style.backgroundSize = bgProp.prop.size.width + 'px ' + bgProp.prop.size.height + 'px';
-			textEl.element.style.backgroundImage = 'url(' + bgProp.prop.src + ')';
-			textEl.element.style.webkitBackgroundClip = 'text';
-			textEl.element.style.backgroundClip = 'text';
-			textEl.element.style.color = 'rgba(0, 0, 0, 0)';
-			textEl.element.style.backgroundAttachment = bgProp.prop.backgroundAttachment;
+			TextProperties.element.style.backgroundPosition = (BgProperties.pos.left - TextProperties.pos.left + BgProperties.prop.x) + 'px ' + (BgProperties.pos.top - TextProperties.pos.top + BgProperties.prop.y) + 'px';
+			TextProperties.element.style.backgroundSize = BgProperties.prop.size.width + 'px ' + BgProperties.prop.size.height + 'px';
+			TextProperties.element.style.backgroundImage = 'url(' + BgProperties.prop.src + ')';
+			TextProperties.element.style.webkitBackgroundClip = 'text';
+			TextProperties.element.style.backgroundClip = 'text';
+			TextProperties.element.style.color = 'rgba(0, 0, 0, 0)';
+			TextProperties.element.style.backgroundAttachment = BgProperties.prop.backgroundAttachment;
 			
-			hasBeenDrawn = true;
+			bakom.hasBeenDrawn = true;
 		},
 
-		//rest css on text element
-		unsetCSS = function(){
-			for(var attr in textEl.style){
-				textEl.element.style[attr] = textEl.style[attr];
+		/**
+		 * Reset text element's css properties
+		 */
+		deleteCSS = function(){
+			for(var attr in TextProperties.style){
+				TextProperties.element.style[attr] = TextProperties.style[attr];
 			}
 		},
 
-		//delete image and clip path svg
+		/**
+		 * delete all svgs build and attached by Bakom
+		 */
 		deleteSvgs = function(){
-			for(var svg in svgs){
-				svgs[svg].parentNode.removeChild(svgs[svg]);
+			for(var svg in bakom.svgs){
+				bakom.svgs[svg].parentNode.removeChild(bakom.svgs[svg]);
 			}
 		},
 
-		//remove image svg and reset innertext
+		/**
+		 * Reset text element's text
+		 */
 		resetElement = function(){
-			textEl.element.innerHTML = originalText;
+			TextProperties.element.innerHTML = OriginalText;
 		},
 
-		//setup elements
+		/**
+		 * Initialize Bakom
+		 *
+		 * 	Available Configure settings and Defaults 
+		 * 	backgroundSelector : 'body',
+			textSelector : '',
+			styleClass : '',
+			dy : '',
+			dx : '',
+			backgroundClipSupportOnly : true,
+			debug : false
+		 * 
+		 * @param  {String} textElementSelector Text elemnt selector
+		 * @param  {Object} configure           Configure setup
+		 */
 		init = function(textElementSelector, configure){
+			
+			//if the setup success, build css or svg
 			if(setup(textElementSelector, configure)){
-				if(hasCssSupport) setCSS();
-				else if(!defaults.backgroundClipSupportOnly) {
-					if(!defaults.dy && defaults.debug){
+				//css only
+				if(bakom.hasBackgroundClipSupport) buildCSS();
+
+				//use svg
+				else if(!Defaults.backgroundClipSupportOnly) {
+					if(!Defaults.dy && Defaults.debug){
 			        	console.warn('BAKOM.JS: no dy value set. Please read the documentation for bakom.js to find out why this isn\'t a good idea.');
 			        }
 					buildSvg();
-				};				
+				};
+
 			}
+
+			//build failed
 			else{
 				console.error('BAKOM.JS: Something went wrong in the setup. Either the background or text element selector wasn\'t set or one of the element wasn\'t found');
 			}
 		},
 
-		//reset the elements to it's inital state
+		/**
+		 * Resets all element changed or attached by Bakom
+		 * @return {[type]} [description]
+		 */
 		reset = function(){
-			if(hasBeenDrawn){
-				if(hasCssSupport) unsetCSS();
+			if(bakom.hasBeenDrawn){
+				if(bakom.hasBackgroundClipSupport) deleteCSS();
 				else {
 					deleteSvgs();
 					resetElement();
 				}
 			}
-		},
-
-		/**
-		 * updates the global states variables
-		 */
-		setState = function(){
-			bakom.hasBeenDrawn = hasBeenDrawn;
-			bakom.hasBackgroundClipSupport = hasCssSupport;
-			bakom.svgs = svgs;
-
-			if(textEl) bakom.textElement = textEl.element;
-			else bakom.textElement = undefined;
-			
-			if(bgProp) bakom.backgroundElement = bgProp.element;
-			else bakom.backgroundElement = undefined;
 		};
 
-		// set the blobal state variables on initialization
-		setState();
+	/*
+		global variables
+	 */
+	
+	bakom.hasBeenDrawn = false;
+	bakom.hasBackgroundClipSupport = hasBackgroundClipSupport();
+	bakom.svgs = {};
+	bakom.textElement = undefined;		
+	bakom.backgroundElement = undefined;	
 
 	/*
 		global api
 	*/
 
-
 	/**
 	 * bakom.init builds a new bakom element
 	 * @param  {String} textElementSelector
-	 * @param  {object} configure Background element selector, style class string, dy variable, dx variable, backgroundClipSupportOnly boolean and debug boolean
-	 * @return {object} the bakom object itself
+	 * @param  {object} Configure Configure Background element selector, style class string, dy variable, dx variable, backgroundClipSupportOnly boolean and debug boolean
+	 * @return {object} Bakom The bakom object itself
 	 */
 	bakom.init = function(textElementSelector, configure){
+		var configure = configure || {};
+
 		/*
 			build new bakom if backgroundClipSupportOnly and the browser supports it OR if !backgroundClipSupportOnly
 		 */
-		if((configure.backgroundClipSupportOnly !== false && hasCssSupport) || configure.backgroundClipSupportOnly === false) init(textElementSelector, configure);
-		
-		//update gobal state TODO do something more clever so I don't have to remember to do this everywhere 
-		setState();
+		if((configure.backgroundClipSupportOnly !== false && bakom.hasBackgroundClipSupport) || configure.backgroundClipSupportOnly === false) {
+			init(textElementSelector, configure);
+		}
 
 		return bakom;
 	};
 
 	/**
 	 * bakom.reset if a bakom elements been built reset it to its initial state
-	 * @return {object} the bakom object itself
+	 * @return {object} Bakom The bakom object itself
 	 */
-	bakom.reset = function(){
-		
+	bakom.reset = function(){		
 		reset();
-
-		//update gobal state TODO do something more clever so I don't have to remember to do this everywhere 
-		setState();
 		return bakom;
 	};
 
 	/**
 	 * bakom.redraw if a bakom elements been built its values get recalculated and new values applied
 	 * @param  {String} textElementSelector
-	 * @param  {object} configure Background element selector, style class string, dy variable, dx variable, backgroundClipSupportOnly boolean and debug boolean
-	 * @return {object} the bakom object itself
+	 * @param  {object} Configure Configure Background element selector, style class string, dy variable, dx variable, backgroundClipSupportOnly boolean and debug boolean
+	 * @return {object} Bakom The bakom object itself
 	 */
 	bakom.redraw = function(textElementSelector, configure){
-		if(hasBeenDrawn){
+		if(bakom.hasBeenDrawn){
 			reset();
 			init(textElementSelector, configure);
 		}
 		setState();
 		return bakom;
 	};
+
 }
