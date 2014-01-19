@@ -51,7 +51,7 @@ window.Bakom = function(){
 		 * setup background element and text element properties if they exists and are well formatted
 		 *
 		 * 	Available Configure settings and Defaults 
-		 * 	backgroundSelector : 'body',
+		 	backgroundSelector : 'body',
 			textSelector : '',
 			styleClass : '',
 			dy : '',
