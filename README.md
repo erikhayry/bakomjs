@@ -59,6 +59,7 @@ Configure
 	text.init('#text', {
 		backgroundSelector : '#background',
 		styleClass : 'text',
+		backgroundClipSupportOnly : false,
 		dy : '0.9em'
 	})
 </script>
